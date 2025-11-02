@@ -1,16 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis Result</title>
-</head>
-<body>
-    <h1>データ分析結果</h1>
-    <h2>データ概要</h2>
-    {{ summary|safe }}
-    <h2>グラフ</h2>
-    <img src="data:image/png;base64,{{ graphic }}" alt="Graph">
-    <a href="{% url 'upload_csv' %}">別のcsvをアップロード</a>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow p-4">
+    <h3 class="mb-4 text-center">分析結果</h3>
+    <h5>データ概要</h5>
+    <div class="table-responsive mb-4">
+        {{ summary|safe }}
+    </div>
+
+    <h5>ペアプロット</h5>
+    <img src="data:image/png;base64,{{ graphic }}" class="img-fluid mb-4" alt="ペアプロット">
+    <h5>相関ヒートマップ</h5>
+    <img src="data:image/png;base64,{{ graphic2 }}" alt="ヒートマップ" class="img-fluid mb-4">
+    <div class="text-center">
+        <a href="{% url 'upload_csv' %}" class="btn btn-secondary">別のファイルをアップロード</a>
+    </div>
+</div>
+{% endblock %}

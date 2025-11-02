@@ -1,14 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>CSV Upload</title>
-</head>
-<body>
-    <h1>CSVファイルをアップロード</h1>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card shadow p-4">
+    <h3 class="mb-3 text-center">CSVファイルをアップロード</h3>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">アップロード</button>
+        <button type="submit" class="btn btn-primary">アップロード</button>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}
