@@ -14,7 +14,10 @@ def upload_csv(request):
         if form.is_valid():
             dataset = form.save()
             #csvファイルを読み込む
-            df = pd.read_csv(dataset.csv_file.path, nrows=500)
+            try:
+                df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='utf-8')
+            except:
+                df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='shift-jis')
             #データの要約を取得
             summary = df.describe().to_html(classes="table table-striped")
             #グラフを作成(ペアプロット)
@@ -60,7 +63,10 @@ def dataset_list(request):
 
 def dataset_detail(request, pk):
     dataset = get_object_or_404(Dataset, pk=pk)
-    df = pd.read_csv(dataset.csv_file.path, nrows=500)
+    try:
+        df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='utf-8')
+    except UnicodeDecodeError:
+        df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='shift_jis')
     #データの要約を取得
     summary = df.describe().to_html(classes="table table-striped")
     #グラフを作成(ペアプロット)
