@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .forms import DatasetForm
 from .models import Dataset
 import pandas as pd
@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import base64
+import os
 
 def upload_csv(request):
     if request.method == 'POST':
@@ -13,7 +14,7 @@ def upload_csv(request):
         if form.is_valid():
             dataset = form.save()
             #csvファイルを読み込む
-            df = pd.read_csv(dataset.csv_file.path)
+            df = pd.read_csv(dataset.csv_file.path, nrows=500)
             #データの要約を取得
             summary = df.describe().to_html(classes="table table-striped")
             #グラフを作成(ペアプロット)
@@ -59,7 +60,7 @@ def dataset_list(request):
 
 def dataset_detail(request, pk):
     dataset = get_object_or_404(Dataset, pk=pk)
-    df = pd.read_csv(dataset.csv_file.path)
+    df = pd.read_csv(dataset.csv_file.path, nrows=500)
     #データの要約を取得
     summary = df.describe().to_html(classes="table table-striped")
     #グラフを作成(ペアプロット)
@@ -94,3 +95,12 @@ def dataset_detail(request, pk):
         'graphic': graphic,
         'graphic2': graphic2
     })
+
+def dataset_delete(request, pk):
+    dataset = get_object_or_404(Dataset, pk=pk)
+    #csvファイルを削除
+    if dataset.csv_file:
+        if os.path.isfile(dataset.csv_file.path):
+            dataset.csv_file.delete(save=True)
+    dataset.delete()
+    return redirect('dataset_list')
