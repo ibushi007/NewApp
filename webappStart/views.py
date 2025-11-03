@@ -69,22 +69,27 @@ def dataset_detail(request, pk):
         df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='shift_jis')
     #データの要約を取得
     summary = df.describe().to_html(classes="table table-striped")
+    #数値列のみを抽出
+    num_df = df.select_dtypes(include='number')
     #グラフを作成(ペアプロット)
-    sns.set_theme(style='ticks')
-    pairplot = sns.pairplot(df.select_dtypes(include='number'))
+    if not num_df.empty:
+        sns.set_theme(style='ticks')
+        pairplot = sns.pairplot(df.select_dtypes(include='number'))
     #バイナリ写真データ→文字列（こうすることでhtmlに入れられる）        #BytesIOは仮想ファイルを作ってくれる
-    buffer = io.BytesIO()        
+        buffer = io.BytesIO()        
     #pngのバイナリデータを仮想ファイルに保存        
-    pairplot.savefig(buffer, format='png')
-    plt.close()
+        pairplot.savefig(buffer, format='png')
+        plt.close()
     #seekで読み取り位置を先頭にする
-    buffer.seek(0)
+        buffer.seek(0)
     #getvalueはseekから最後までbytesとして取り出す
-    image_png = buffer.getvalue()
+        image_png = buffer.getvalue()
     #image_pngに保存したのでバイナリファイルを消滅させる
-    buffer.close()
+        buffer.close()
     #バイナリを文字列に
-    graphic = base64.b64encode(image_png).decode('utf-8')
+        graphic = base64.b64encode(image_png).decode('utf-8')
+    else:
+        graph = None
     #グラフ作成（相関ヒートマップ）
     plt.figure(figsize=(6, 4))
     numeric_data = df.select_dtypes(include=['number'])
