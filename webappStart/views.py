@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from .forms import DatasetForm
 from .models import Dataset
 import pandas as pd
@@ -18,9 +18,13 @@ def upload_csv(request):
                 df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='utf-8')
             except:
                 df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='shift-jis')
+            df = df.apply(pd.to_numeric, errors='ignore')
+            num_df = df.select_dtypes(include='number')
             #データの要約を取得
             summary = df.describe().to_html(classes="table table-striped")
             #グラフを作成(ペアプロット)
+            if num_df.empty:
+                return HttpResponse("エラー: 数値データが見つかりません")
             sns.set_theme(style='ticks')
             pairplot = sns.pairplot(df.select_dtypes(include='number'))
             #バイナリ写真データ→文字列（こうすることでhtmlに入れられる）
@@ -67,29 +71,30 @@ def dataset_detail(request, pk):
         df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='utf-8')
     except UnicodeDecodeError:
         df = pd.read_csv(dataset.csv_file.path, nrows=500, encoding='shift_jis')
+    #数値に変換できるならする
+    df = df.apply(pd.to_numeric, errors='ignore')
     #データの要約を取得
     summary = df.describe().to_html(classes="table table-striped")
     #数値列のみを抽出
     num_df = df.select_dtypes(include='number')
     #グラフを作成(ペアプロット)
-    if not num_df.empty:
-        sns.set_theme(style='ticks')
-        pairplot = sns.pairplot(df.select_dtypes(include='number'))
+    if num_df.empty:
+        return HttpResponse("エラー: 数値データが見つかりません")
+    sns.set_theme(style='ticks')
+    pairplot = sns.pairplot(df.select_dtypes(include='number'))
     #バイナリ写真データ→文字列（こうすることでhtmlに入れられる）        #BytesIOは仮想ファイルを作ってくれる
-        buffer = io.BytesIO()        
+    buffer = io.BytesIO()        
     #pngのバイナリデータを仮想ファイルに保存        
-        pairplot.savefig(buffer, format='png')
-        plt.close()
+    pairplot.savefig(buffer, format='png')
+    plt.close()
     #seekで読み取り位置を先頭にする
-        buffer.seek(0)
+    buffer.seek(0)
     #getvalueはseekから最後までbytesとして取り出す
-        image_png = buffer.getvalue()
+    image_png = buffer.getvalue()
     #image_pngに保存したのでバイナリファイルを消滅させる
-        buffer.close()
+    buffer.close()
     #バイナリを文字列に
-        graphic = base64.b64encode(image_png).decode('utf-8')
-    else:
-        graph = None
+    graphic = base64.b64encode(image_png).decode('utf-8')
     #グラフ作成（相関ヒートマップ）
     plt.figure(figsize=(6, 4))
     numeric_data = df.select_dtypes(include=['number'])
